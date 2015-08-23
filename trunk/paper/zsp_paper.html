@@ -1,0 +1,190 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<style>
+body{
+padding:0;margin:0;
+font-family:Georgia,serif;
+}
+a {
+color: #0000A5;
+padding:0 1px;
+text-decoration:none;
+}
+a:hover {
+color: #B7FF00;
+background:#000;
+}
+h1{
+font-size:1.8em;
+font-weight:normal;
+font-family:微软雅黑,楷体_GB2312;
+text-align:center;
+}
+h2{
+font-size:1em;
+}
+.content{
+margin:1em 10%;
+}
+.about{
+text-align:right;
+}
+p{text-indent:1em;}
+</style>
+</head>
+<body>
+<div class="content">
+<h1>基于特征词聚类的医疗广告精准投放</h1>
+<p class="about">张沈鹏 2008年3月</p>
+<h2 name="index">索引</h2>
+<ol>
+    <li><a href="#breif">概要</a></li>
+    <li><a href="#knowledge-related">背景知识</a></li>
+    <li><a href="#framework">程序框架</a></li>
+    <li><a href="#author">作者介绍</a></li>    
+    <li><a href="#reference">参考文献</a></li>
+</ol>
+
+<a name="breif"></a><h2>概要</h2>
+<p>通过特征词/短语,实现信息进行实时分类、聚合.</p>
+<p>可应用于: 广告精准投放,关联文章推荐,用户交友配对,Tag自动生成等.</p>
+<p>本文将实现特征词聚类,并在其基础上创建一个广告投放系统.</p>
+<a name="knowledge-related"></a><h2>背景知识</h2>
+<ol>
+<li>
+    <b>什么是聚类?</b>
+    <p>聚类是把一个集合分成几个子集的过程。聚类后，各子集中的内容相似度极大，而子集间的相似度小。</p>
+</li>
+<li>
+    <b>什么是特征词/短语?</b>
+    <p>具有鲜明地类别特征的词/短语.如“骨质增生”就是 健康 -> 骨科 的特征关键字.</p>
+    <p>用户的兴趣爱好也可以用一组特征关键词来表示,如“魔兽争霸 科幻世界 李白”.</p>
+</li>
+<li>
+    <b>特征词权重</b>
+    <p>量化的特征词所能代表主题的程度,最著名的是TF*IDF.</p>
+    <p>TF( Term Frequency ) : 关键词的频率,TF ＝ 关键词出现的次数/总字数.</p>
+    <p>IDF( Inverse Document Frequency ) : 逆文本频率指数,IDF ＝ log(出现的文本数/文本总数).</p>
+    <p>TF*IDF,它能反映文本中一个词所能够表示该文本主题能力.</p>
+    <p>TF*IDF有不少进行细微的优化的变形,加入了信息增益、期望交叉熵、文本证据权、χ2 统计量等因子.</p>
+</li>
+<li>
+<b>Bloom Filter简介</b>
+<p>Bloom Filter 能高效的判断一个集合中是否存在一个元素。但有可能会把不属于这个集合的元素误认为属于这个集合。</p>
+<p>基本原理为:用k个的哈希函数，将元素映射到{1,…,m}的桶中。对任意一个元素x，第i个哈希函数映射的位置k[i](x)就会被置为1（1≤i≤k）.在判断y是否属于这个集合时，我们对y应用k次哈希函数，如果所有k[i](y)的位置都是1（1≤i≤k），那么我们就认为y是集合中的元素，否则就认为y不是集合中的元素.</p>
+<p>由于不需要保存原始数据，Bloom Filter空间效率极高.常用于海量数据的处理(如垃圾邮件的黑名单).</p>
+<p>
+	Bloom Filter发生错误定位的概率<div style="font-size:2em;text-align:center;">
+		f = (1-e<sup>-kn/m</sup>)<sup>k</sup> = (1-p)<sup>k</sup>
+	</div>
+	</p>
+	<p>
+	其中,m为Bloom Filter的桶大小,n为元素的个数,k为哈希函数的个数,p是位置为1的概率.
+	</p>
+	<p>从而推算得到当p = 1/2即k=ln2*(m/n)时,错误率最小.因为p是位数组中某一位仍是0的概率，所以p = 1/2对应着位数组中0和1各一半。换句话说，要想保持错误率低，最好让位数组有一半还空着。</p>
+	<p>另外可以得到在错误率不大于є的情况下，m至少要等于n*log2(1/є)才能表示任意n个元素的集合。</p>
+	<p>对于Bloom Filter有一些相应的优化,比如由文献6可知,可以通过两个hash函数来模拟多个hash函数.</p>
+	<p>文献5便提到了计数型Bloom Filter在挖掘频繁项中的应用.我们将利用Bloom Filter挖掘常用短语.</p>
+</li>
+
+</ol>
+
+<a name="framework"></a><h2>程序框架</h2>
+<p>程序分为以下几大模块</p>
+<ol>
+<li>
+    <p>内容抓取</p>
+    <ol>
+        <li>
+            <p>训练集的抓取</p>
+            <p>训练集主要有两个来源 1.万方文献库 2.各大门户以及垂直门户网站</p>
+            <p>训练集主要的样本文本的内容主要分为:标题,关键词/短语(即标引),内容</p>
+            <p>标题,关键词,是用于主题描述词语,文本主题表示功能强,将是重点研究的对象.</p>
+            <p>万方论文已经表明关键词,很方便采集.</p>
+            <p>门户网站可以通过其页面中类似&lt;meta name="keywords" content="非典 中医疗法"&gt;的meta标签获取.</p>
+			<p>本项目中,训练预料中万方抓取的文章数目</p>
+<ul>
+<li>社会科学 1846</li><li>
+经济财政 167958</li><li>
+教科文艺 184067</li><li>
+基础科学 249237</li><li>
+农业科学 14960</li><li>
+工业技术 177797</li><li>
+医药卫生 436514</li>
+</ul>
+<p>其中总文章数为1232379(备注:万方总文献数为13200803,有由于条件限制,只抓取了部分),但着重抓取了与医疗相关的文献.</p>
+
+        </li>
+        <li><p>待分类页面的抓取</p>
+        <p>也分两个部分 1.内容页面 2.广告页面/内容</p>
+        <p>其中内容部分以当当网(dangdang.com)的商品为示例</p>
+        </li>
+        <li>
+            <p>抓取的程序框架,该部分使用python实现,相关的库有urllib,thread,BeautifulSoup,bsddb等</p>
+            <ol>
+                <li><p>网页下载</p></li>
+                <li><p>内容提取</p></li>
+                <li><p>断点续抓</p></li>
+            </ol>
+        </li>
+    </ol>
+</li>
+<li>
+    <p>特征词/短语提取</p>
+    <p>该部分采用C++实现,并提供python接口</p>
+    <p>对于标题,在搜狗词库的基础上采用最大匹配法分词(基于双字哈希机制),并通过统计发现常用短语(长度为5-9).对于未登录词,采用长度为7的全切法.</p>
+    <p>长度选取的依据是的心理学研究,大部分人一眼能够记住的字符长度为7<u>+</u>2</p>
+    <p>最后通过统计得到各个分类的特征词和其相应的权重</p>
+    <p>对应正文部分,通过基于Bloom Filter的频繁集挖掘,也可以过滤出特征短语(长度为2-9)(每个长度用一组Bloom Filter分别统计)</p>
+	<p style="text-align:center;"><img src="weighing.png"></img></p>
+	<p>另外从文献中可以得知,n=3时效果最好</p>
+	<p>因为是针对医疗广告投放(加之训练预料不完整),我简化了类别的数目,仅仅分为医学类和其他类.</p>
+    
+	<p>统计而得医学有词/词组40083272,其他为48704735,共计88788007个.领域常用词表：从各领域词表中按照频率从高到低取词建立的覆域专用词表：由本领域内出现频率大于等于 0.0005%，在其他领0.0001%的词构成的词表。 </p>
+    <p style="text-align:center;"><img src="html_weighing.gif"></img></p>
+</li>
+<li>
+    <p>聚类</p>
+    <p>VSM+余弦夹角</p>
+    <p>VSM算法将文本看成空间向量，每个维度的值为单词的权重，然后将一个类别中的所有文本向量相加得到该类别的特征向量.分类时，计算文档与每个类别特征向量的相似度，相似度最大的类向量对应的类别作为该文档的类别。</p>
+</li>
+<li>
+    <p>相关应用的构建 -- 精准广告投放</p>
+    <p>基于特征词库进行最大匹配切词,得出文章关键词</p>
+    <p>基于特征词进行搜索广告</p>
+    <p>当没有匹配广告时,通过特征词对文章进行分类投放该分类的广告</p>
+    <p>框架选取pylons</p>
+</li>
+<li>
+    <p>可选部分:流行词的识别</p>
+</li>
+</ol>
+
+
+
+<a name="author"></a><h2>作者介绍</h2>
+<p>张沈鹏,电子科技大学08年毕业,双学位,生物医学工程及计算机科学与技术.</p>
+<p>熟悉Python,Javascript,Html/Css,C++,D等各种编程语言,从事互联网相关的应用开发.</p>
+<p>Blog : <a href="http://zsp.javaeye.com" target="_blank">zsp.javaeye.com</a></p>
+<p>Email/Msn/Gtalk : zsp007@gmail.com</p>
+
+<a  name="reference"></a><h2>参考文献</h2>
+<ol>
+<li>
+《基于文本分类中特征提取的领域词语聚类》,《基于关键短语的文本分类研究》刘华(暨南大学 华文学院/海外华语研究中心)
+</li>
+<li>《一种中文分词词典新机制--双字哈希机制》 李庆虎,陈玉健,孙家广(清华大学 计算机系)</li>
+<li>《数学之美 系列九--如何确定网页和查询的相关性》 </li>
+<li>《基于N元汉字串模型的文本表示和实时分类的研究与实现》</li>
+<li>《在数据流中挖掘频繁项》</li>
+<li>基于大规模真实文本的平衡语料分析与文本分类方法</li>
+<li>《Less Hashing, Same Performance Building a Better Bloom Filter》</li>
+<li>《General Purpose Hash Function Algorithms - By Arash Partow》(<a href="http://www.partow.net/programming/hashfunctions/" target="_blank">http://www.partow.net/programming/hashfunctions/</a>)
+</li>
+
+</ol>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+索引
+http://book.dangdang.com/catagory/book_second_category.aspx
+
+    
+http://list.book.dangdang.com/01.56.01_Z100_P1.htm
+含义如下
+http://list.book.dangdang.com/01.56.01_Z每个页面的条数_P页数.htm
+
+其按照销量排序,可以做投放的参考指标
+
+链接为
+所有的
+span class="list_r_list_book"
+下的
+h2
+下的
+a
+
+http://product.dangdang.com/product.aspx?product_id=8805332
+
+div shuming_left
+	span black000 书名
+	div	lineheight14 丛书名： 新知文库(可无)
+图片为
+http://images.dangdang.com/images/20106220.jpg			(大图)
+http://images.dangdang.com/images/20106220_b.jpg		(小图)
+
+可能无图片,可以判断一下md5值
+
+div book_right
+	作者:
+		div id=author_
+			a blue12a(可以多个)
+
+	出版社:
+		div id=publisher_
+			a blue12a
+    定价:spilt("：￥")
+        div jiage
+            span del 定价
+            span redc30
+                b   当当价
+            
+	其他信息:
+		meta,desp=spilt('：',1)
+		meta.replace('　','')
+		desp.strip()
+
+		ul  nostyle
+		<li>出版时间： 2008-1-1</li>
+		<li>字　　数： 209000</li>
+		<li>版　　次： 1</li>
+		<li>页　　数： 259</li>
+		<li>印刷时间： 2007/12/01</li>
+		<li>开　　本： </li>
+		<li>印　　次： 1</li>
+		<li>纸　　张： 胶版纸</li>
+		<li>I S B N    ： 9787108027801</li>
+		<li>包　　装： 平装</li>
+
+div id=__zhinengbiaozhu_bk
+	h2  right_title1	如:内容简介
+	div right_content 正文
+
+div id=__alsoview_bk
+浏览本书的顾客还看过
+    div class=tuwen_right
+        a.title
+        编号product.aspx?product_id=9308752&mode=new
+        <span class="del">￥24.00</span><br />
+        <span class="redc30">￥19.00</span>
+
+买过
+__alsobuy_bk

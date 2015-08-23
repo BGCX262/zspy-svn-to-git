@@ -1,0 +1,9 @@
+中文标题 : ${cn_title}
+英文标题 : ${en_title}
+关键词 : ${keyword}
+作者 : ${author}
+出处 : ${magezine} 
+时间 : ${time}
+分类 : ${kind}
+网址 : ${url}
+摘要 : ${brief}

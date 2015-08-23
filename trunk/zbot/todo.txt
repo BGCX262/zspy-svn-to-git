@@ -1,0 +1,13 @@
+1.DBSCAN算法是一种基于密度的聚类方法 研究一下
+
+
+2.
+class Site
+    name
+    index_url
+    bind(praser)
+    fetch
+    
+3.
+page_model添加BufDirPage,可以缓存(类似mako?)
+

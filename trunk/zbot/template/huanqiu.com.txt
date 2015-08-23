@@ -1,0 +1,20 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<style>
+h1{
+text-align:center;
+font-family:方正静蕾简体,"Microsoft JhengHei",黑体;
+}
+.breif{
+border:1px dashed #ddd;
+padding:1em;
+}
+</style>
+<title>${title}</title></head>
+<body><h1>${title}</h1>
+<div class="breif">关键词 : ${keyword}</div>
+<div>${content}</div>
+<a href="${url}" style="float:right;">原文链接</a>
+</body></html>

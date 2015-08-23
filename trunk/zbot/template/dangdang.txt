@@ -1,0 +1,15 @@
+当当编号 : ${c.id}
+标题 : ${c.title}
+丛书名: ${c.series}
+作者 : ${c.author}
+出版社 : ${c.publisher}
+定价 : ${c.price}
+当当价 : ${c.dangdang_price}
+%for k,v in c.other:
+${k} : ${v}
+%endfor
+~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+%for k,v in c.desption:
+>>> ${k}
+${v}
+%endfor
